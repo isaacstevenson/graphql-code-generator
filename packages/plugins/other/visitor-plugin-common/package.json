@@ -1,10 +1,10 @@
 {
-  "name": "@graphql-codegen/visitor-plugin-common",
-  "version": "5.8.0",
+  "name": "@isaacstevenson-graphqlcodegen/visitor-plugin-common",
+  "version": "5.8.0-custom.1",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dotansimha/graphql-code-generator.git",
+    "url": "https://github.com/isaacstevenson/graphql-code-generator.git",
     "directory": "packages/plugins/other/visitor-plugin-common"
   },
   "scripts": {
