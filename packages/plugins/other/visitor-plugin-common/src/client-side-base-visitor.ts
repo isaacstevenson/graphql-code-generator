@@ -377,7 +377,7 @@ export class ClientSideBaseVisitor<
         ` ${print(node).split('\\').join('\\\\') /* Re-escape escaped values in GraphQL syntax */}`
       );
       for (const fragmentName of fragmentNames) {
-        doc = inlineFragmentReplacement(node, doc, fragmentName, this.getFragmentVariableName(fragmentName));
+        doc = inlineFragmentReplacement(doc, fragmentName, this.getFragmentVariableName(fragmentName));
       }
       doc = formatInlineFragmentReplacement(node, doc);
     } else {
