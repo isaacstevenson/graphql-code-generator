@@ -370,7 +370,9 @@ export class ClientSideBaseVisitor<
     let doc: string | undefined;
     if (this.config.inlineFragmentReplacement) {
       // replace all fragment spreads with inline fragments
-      doc = this._prepareDocument(` ${print(node).split('\\').join('\\\\') /* Re-escape escaped values in GraphQL syntax */}`)
+      doc = this._prepareDocument(
+        ` ${print(node).split('\\').join('\\\\') /* Re-escape escaped values in GraphQL syntax */}`
+      );
       for (const fragmentName of fragmentNames) {
         doc = inlineFragmentReplacement(node, doc, fragmentName, this.getFragmentVariableName(fragmentName));
       }
@@ -463,9 +465,9 @@ export class ClientSideBaseVisitor<
 
     if (this.config.inlineFragmentReplacement) {
       return (node.kind === Kind.FRAGMENT_DEFINITION ? '' : gqlImport.propName || 'gql') + '`' + doc + '`';
-    } else {
-      return (gqlImport.propName || 'gql') + '`' + doc + '`';
     }
+
+    return (gqlImport.propName || 'gql') + '`' + doc + '`';
   }
 
   protected _getGraphQLCodegenMetadata(
@@ -530,8 +532,8 @@ export class ClientSideBaseVisitor<
       }),
       this.config.experimentalFragmentVariables
         ? this.convertName(fragmentDocument.name.value, {
-          suffix: fragmentTypeSuffix + 'Variables',
-        })
+            suffix: fragmentTypeSuffix + 'Variables',
+          })
         : 'unknown',
       fragmentDocument
     )};`;
@@ -786,8 +788,9 @@ export class ClientSideBaseVisitor<
       this.config.documentMode !== DocumentMode.external &&
       documentVariableName !== '' // only generate exports for named queries
     ) {
-      documentString = `${this.config.noExport ? '' : 'export'} const ${documentVariableName} =${this.config.pureMagicComment ? ' /*#__PURE__*/' : ''
-        } ${this._gql(node)}${this.getDocumentNodeSignature(operationResultType, operationVariablesTypes, node)};`;
+      documentString = `${this.config.noExport ? '' : 'export'} const ${documentVariableName} =${
+        this.config.pureMagicComment ? ' /*#__PURE__*/' : ''
+      } ${this._gql(node)}${this.getDocumentNodeSignature(operationResultType, operationVariablesTypes, node)};`;
     }
 
     const hasRequiredVariables = this.checkVariablesRequirements(node);
