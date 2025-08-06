@@ -234,6 +234,7 @@ export interface ClientSideBasePluginConfig extends ParsedConfig {
   experimentalFragmentVariables?: boolean;
   unstable_onExecutableDocumentNode?: Unstable_OnExecutableDocumentNode;
   unstable_omitDefinitions?: boolean;
+  inlineFragmentReplacement?: boolean;
 }
 
 type ExecutableDocumentNodeMeta = Record<string, unknown>;
@@ -365,9 +366,30 @@ export class ClientSideBaseVisitor<
     const fragmentNames = this._extractFragments(node, includeNestedFragments);
     const fragments = this._transformFragments(fragmentNames);
 
-    const doc = this._prepareDocument(`
-    ${print(node).split('\\').join('\\\\') /* Re-escape escaped values in GraphQL syntax */}
-    ${this._includeFragments(fragments, node.kind)}`);
+    let doc: string | undefined;
+    if (this.config.inlineFragmentReplacement) {
+      // replace all fragment spreads with inline fragments
+      doc = this._prepareDocument(`
+        ${print(node).split('\\').join('\\\\') /* Re-escape escaped values in GraphQL syntax */}`)
+
+      for (const fragmentName of fragmentNames) {
+        const fragmentVariableName = this.getFragmentVariableName(fragmentName);
+        const regex = new RegExp(`\\s*\\.\\.\\.${fragmentName}\\s*`, 'g');
+        doc = doc.replace(regex, `\${${fragmentVariableName}}`);
+      }
+
+      // remove curly braces from fragment definitions
+      if (node.kind === Kind.FRAGMENT_DEFINITION) {
+        doc = doc.replace(/^\s*{\s*/, '').replace(/\s*}\s*$/, '');
+      }
+
+    } else {
+      // default behaviour
+      doc = this._prepareDocument(`
+      ${print(node).split('\\').join('\\\\') /* Re-escape escaped values in GraphQL syntax */}
+      ${this._includeFragments(fragments, node.kind)}`);
+    }
+
 
     if (this.config.documentMode === DocumentMode.documentNode) {
       let gqlObj = gqlTag([doc]);
@@ -449,7 +471,12 @@ export class ClientSideBaseVisitor<
 
     const gqlImport = this._parseImport(this.config.gqlImport || 'graphql-tag');
 
-    return (gqlImport.propName || 'gql') + '`' + doc + '`';
+    if (this.config.inlineFragmentReplacement) {
+      return (node.kind === Kind.FRAGMENT_DEFINITION ? '' : gqlImport.propName || 'gql') + '`' + doc + '`';
+    } else {
+      //default behaviour
+      return (gqlImport.propName || 'gql') + '`' + doc + '`';
+    }
   }
 
   protected _getGraphQLCodegenMetadata(
@@ -514,8 +541,8 @@ export class ClientSideBaseVisitor<
       }),
       this.config.experimentalFragmentVariables
         ? this.convertName(fragmentDocument.name.value, {
-            suffix: fragmentTypeSuffix + 'Variables',
-          })
+          suffix: fragmentTypeSuffix + 'Variables',
+        })
         : 'unknown',
       fragmentDocument
     )};`;
@@ -770,9 +797,8 @@ export class ClientSideBaseVisitor<
       this.config.documentMode !== DocumentMode.external &&
       documentVariableName !== '' // only generate exports for named queries
     ) {
-      documentString = `${this.config.noExport ? '' : 'export'} const ${documentVariableName} =${
-        this.config.pureMagicComment ? ' /*#__PURE__*/' : ''
-      } ${this._gql(node)}${this.getDocumentNodeSignature(operationResultType, operationVariablesTypes, node)};`;
+      documentString = `${this.config.noExport ? '' : 'export'} const ${documentVariableName} =${this.config.pureMagicComment ? ' /*#__PURE__*/' : ''
+        } ${this._gql(node)}${this.getDocumentNodeSignature(operationResultType, operationVariablesTypes, node)};`;
     }
 
     const hasRequiredVariables = this.checkVariablesRequirements(node);
