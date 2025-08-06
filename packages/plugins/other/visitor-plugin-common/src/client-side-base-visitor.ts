@@ -213,6 +213,8 @@ export interface RawClientSideBasePluginConfig extends RawConfig {
    * @description If set to true, it will enable support for parsing variables on fragments.
    */
   experimentalFragmentVariables?: boolean;
+
+  inlineFragmentReplacement?: boolean;
 }
 
 export interface ClientSideBasePluginConfig extends ParsedConfig {
@@ -277,6 +279,7 @@ export class ClientSideBaseVisitor<
       documentVariableSuffix: getConfigValue(rawConfig.documentVariableSuffix, 'Document'),
       fragmentVariablePrefix: getConfigValue(rawConfig.fragmentVariablePrefix, ''),
       fragmentVariableSuffix: getConfigValue(rawConfig.fragmentVariableSuffix, 'FragmentDoc'),
+      inlineFragmentReplacement: getConfigValue(rawConfig.inlineFragmentReplacement, false),
       documentMode: ((rawConfig: RawClientSideBasePluginConfig) => {
         if (typeof rawConfig.noGraphQLTag === 'boolean') {
           return rawConfig.noGraphQLTag ? DocumentMode.documentNode : DocumentMode.graphQLTag;
