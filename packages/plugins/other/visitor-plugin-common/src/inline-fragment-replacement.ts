@@ -1,13 +1,8 @@
 import { Kind } from 'graphql';
 
-export function inlineFragmentReplacement(
-  node: any,
-  doc: string,
-  fragmentName: string,
-  fragmentVariableName: string
-): string {
+export function inlineFragmentReplacement(doc: string, fragmentName: string, fragmentVariableName: string): string {
   const regex = new RegExp(`\\s*\\.\\.\\.${fragmentName}\\s*`, 'g');
-  return doc.replace(regex, `\${${fragmentVariableName}}`);
+  return doc.replace(regex, ` \${${fragmentVariableName}} `);
 }
 
 export function formatInlineFragmentReplacement(node: any, doc: string): string {
