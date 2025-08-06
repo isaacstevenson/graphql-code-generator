@@ -1,5 +1,5 @@
 {
-  "name": "@isaacstevenson-graphqlcodegen/visitor-plugin-common",
+  "name": "@isaacstevenson/visitor-plugin-common",
   "version": "5.8.0-custom.1",
   "license": "MIT",
   "repository": {
