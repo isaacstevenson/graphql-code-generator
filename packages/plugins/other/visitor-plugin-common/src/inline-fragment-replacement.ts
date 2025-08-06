@@ -8,7 +8,7 @@ export function inlineFragmentReplacement(doc: string, fragmentName: string, fra
 export function formatInlineFragmentReplacement(node: any, doc: string): string {
   if (node.kind === Kind.FRAGMENT_DEFINITION) {
     // remove fragment definition syntax and curly braces
-    doc = doc.replace(/^\s*fragment\s+\w+\s+on\s+\w+\s*{\s*/, '').replace(/\s*}*$/, '');
+    doc = doc.replace(/^\s*fragment\s+\w+\s+on\s+\w+\s*{\s*/, '').replace(/\s*}\s*$/, '');
   }
   return doc;
 }
