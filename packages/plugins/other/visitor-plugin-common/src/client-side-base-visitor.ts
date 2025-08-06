@@ -21,6 +21,7 @@ import { BaseVisitor, ParsedConfig, RawConfig } from './base-visitor.js';
 import { LoadedFragment, ParsedImport } from './types.js';
 import { buildScalarsFromConfig, unique, flatten, getConfigValue, groupBy } from './utils.js';
 import { FragmentImport, ImportDeclaration, generateFragmentImportStatement } from './imports.js';
+import { formatInlineFragmentReplacement, inlineFragmentReplacement } from './inline-fragment-replacement.js';
 
 gqlTag.enableExperimentalFragmentVariables();
 
@@ -369,27 +370,16 @@ export class ClientSideBaseVisitor<
     let doc: string | undefined;
     if (this.config.inlineFragmentReplacement) {
       // replace all fragment spreads with inline fragments
-      doc = this._prepareDocument(`
-        ${print(node).split('\\').join('\\\\') /* Re-escape escaped values in GraphQL syntax */}`)
-
+      doc = this._prepareDocument(` ${print(node).split('\\').join('\\\\') /* Re-escape escaped values in GraphQL syntax */}`)
       for (const fragmentName of fragmentNames) {
-        const fragmentVariableName = this.getFragmentVariableName(fragmentName);
-        const regex = new RegExp(`\\s*\\.\\.\\.${fragmentName}\\s*`, 'g');
-        doc = doc.replace(regex, `\${${fragmentVariableName}}`);
+        doc = inlineFragmentReplacement(node, doc, fragmentName, this.getFragmentVariableName(fragmentName));
       }
-
-      // remove curly braces from fragment definitions
-      if (node.kind === Kind.FRAGMENT_DEFINITION) {
-        doc = doc.replace(/^\s*{\s*/, '').replace(/\s*}\s*$/, '');
-      }
-
+      doc = formatInlineFragmentReplacement(node, doc);
     } else {
-      // default behaviour
       doc = this._prepareDocument(`
       ${print(node).split('\\').join('\\\\') /* Re-escape escaped values in GraphQL syntax */}
       ${this._includeFragments(fragments, node.kind)}`);
     }
-
 
     if (this.config.documentMode === DocumentMode.documentNode) {
       let gqlObj = gqlTag([doc]);
@@ -474,7 +464,6 @@ export class ClientSideBaseVisitor<
     if (this.config.inlineFragmentReplacement) {
       return (node.kind === Kind.FRAGMENT_DEFINITION ? '' : gqlImport.propName || 'gql') + '`' + doc + '`';
     } else {
-      //default behaviour
       return (gqlImport.propName || 'gql') + '`' + doc + '`';
     }
   }
